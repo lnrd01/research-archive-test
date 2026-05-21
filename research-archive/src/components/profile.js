@@ -39,7 +39,7 @@ const Profile = ({ user, onLogin, onLogout }) => {
   const handleClose = () => {
     dispatch(closeProfile());
     setShowModal(false);
-    navigate('/');
+    navigate(-1);
   };
 
   const handleCloseModal = () => {
