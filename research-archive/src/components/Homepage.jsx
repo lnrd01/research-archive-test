@@ -22,7 +22,7 @@ export default function HomePage({ onSearch, user, onOpenProfile }) {
           <button className="home-nav-btn" onClick={onOpenProfile}>
             <span className="home-nav-icon">⌂</span> My Profile
           </button>
-          <button className="home-nav-btn" onClick={() => navigate("/articles")}>
+          <button className="home-nav-btn" onClick={() => navigate("/library")}>
             <span className="home-nav-icon">☆</span> My Library
           </button>
         </div>

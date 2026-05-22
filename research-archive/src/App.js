@@ -4,14 +4,11 @@ import { Routes, Route, useNavigate } from "react-router-dom";
 import Profile from "./components/profile";
 import SidePanel from "./components/sidePanel";
 import HomePage from "./components/Homepage";
+import AcadexiaLibrary from "./components/library_box";
 import profileImg from "./assets/profile-acc.png";
 import { openProfile } from "./store/uiSlice";
 import searchAPI from "./api/search";
 
-/* ============================================================
-   Helper — safely parse a year from various API shapes
-   CORE returns yearPublished as number OR string OR null
-   ============================================================ */
 function parseYear(val) {
   if (!val) return null;
   const n = parseInt(String(val), 10);
@@ -19,7 +16,7 @@ function parseYear(val) {
 }
 
 /* ============================================================
-   ARTICLES PAGE — outside App so React never remounts it
+   ARTICLES PAGE
    ============================================================ */
 function ArticlesPage({
   searchValue, setSearchValue, handleSearch,
@@ -28,15 +25,14 @@ function ArticlesPage({
   timeFilter, setTimeFilter,
   typeFilter, setTypeFilter,
   sortFilter, setSortFilter,
+  savedArticles, onSaveToggle,
 }) {
+  const savedIds = new Set(savedArticles.map((a) => a.id ?? a.title));
 
-  // All filter + sort logic lives HERE, close to the state setters,
-  // so it always reads the latest values — no stale closure issues.
   const filteredResults = useMemo(() => {
     let filtered = [...searchResults];
     const currentYear = new Date().getFullYear();
 
-    // ---- TIME FILTER ----
     if (timeFilter === "Since 2026") {
       filtered = filtered.filter((r) => { const y = parseYear(r.year); return y !== null && y >= 2026; });
     } else if (timeFilter === "Since 2024") {
@@ -48,9 +44,7 @@ function ArticlesPage({
       const to   = timeFilter.to   ? parseInt(timeFilter.to,   10) : currentYear;
       filtered = filtered.filter((r) => { const y = parseYear(r.year); return y !== null && y >= from && y <= to; });
     }
-    // "Any time" → no filter
 
-    // ---- TYPE FILTER ----
     if (typeFilter !== "Any type") {
       const typeKeywords = {
         "Review Articles":   ["review", "meta-analysis", "literature review", "systematic"],
@@ -65,16 +59,13 @@ function ArticlesPage({
       });
     }
 
-    // ---- SORT ----
     if (sortFilter === "Sort by date") {
-      // Newest first; articles with no year go to the bottom
       filtered = [...filtered].sort((a, b) => {
         const yA = parseYear(a.year) ?? 0;
         const yB = parseYear(b.year) ?? 0;
         return yB - yA;
       });
     }
-    // "Sort by relevance" → keep API order
 
     return filtered;
   }, [searchResults, timeFilter, typeFilter, sortFilter]);
@@ -119,14 +110,12 @@ function ArticlesPage({
         </div>
         <div style={styles.tabRight}>
           <button style={styles.tabBtn} onClick={handleOpenLogin}>🏠 My Profile</button>
-          <button style={styles.tabBtn} onClick={() => navigate("/")}>☆ My Library</button>
+          <button style={styles.tabBtn} onClick={() => navigate("/library")}>☆ My Library</button>
         </div>
       </div>
 
       {/* MAIN CONTENT */}
       <div style={styles.mainArea}>
-
-        {/* SIDEBAR — fully controlled, receives current values */}
         <div style={styles.sidebarWrapper}>
           <SidePanel
             selectedTime={timeFilter}
@@ -138,10 +127,9 @@ function ArticlesPage({
           />
         </div>
 
-        {/* RESULTS */}
         <div style={styles.resultsWrapper}>
           {!hasSearched && !loading && (
-            <div style={styles.emptyMessage}>Search millions of open-access academic articles powered by CORE.</div>
+            <div style={styles.emptyMessage}>Search millions of open-access academic articles powered by OpenAlex.</div>
           )}
           {loading && <div style={styles.emptyMessage}>Searching…</div>}
           {!loading && hasSearched && searchResults.length === 0 && (
@@ -163,35 +151,56 @@ function ArticlesPage({
                 )}
               </p>
               <ul style={styles.cardList}>
-                {filteredResults.map((r) => (
-                  <li key={r.id ?? r.title} style={styles.card}>
-                    <div style={styles.cardIconBox}>
-                      <span style={styles.cardIconEmoji}>📖</span>
-                    </div>
-                    <div style={styles.cardBody}>
-                      <div style={styles.cardTitle}>
-                        {r.url ? (
-                          <a href={r.url} target="_blank" rel="noreferrer" style={styles.cardLink}>{r.title}</a>
-                        ) : r.title}
+                {filteredResults.map((r) => {
+                  const isSaved = savedIds.has(r.id ?? r.title);
+                  return (
+                    <li key={r.id ?? r.title} style={styles.card}>
+                      <div style={styles.cardIconBox}>
+                        <span style={styles.cardIconEmoji}>📖</span>
                       </div>
-                      {r.authors?.length > 0 && (
-                        <div style={styles.cardMeta}>
-                          {r.authors.slice(0, 3).join(", ")}{r.authors.length > 3 ? " et al." : ""}
-                          {r.year ? ` · ${r.year}` : ""}
+                      <div style={styles.cardBody}>
+                        <div style={styles.cardTitle}>
+                          {r.url ? (
+                            <a href={r.url} target="_blank" rel="noreferrer" style={styles.cardLink}>{r.title}</a>
+                          ) : r.title}
                         </div>
-                      )}
-                      {r.source && <div style={{ ...styles.cardMeta, fontStyle: "italic" }}>{r.source}</div>}
-                      {r.abstract && (
-                        <p style={styles.cardAbstract}>
-                          {r.abstract.length > 220 ? r.abstract.slice(0, 220) + "…" : r.abstract}
-                        </p>
-                      )}
-                    </div>
-                    <div style={styles.cardActions}>
-                      <button style={styles.iconBtn} title="Save">🔖</button>
-                    </div>
-                  </li>
-                ))}
+                        {r.authors?.length > 0 && (
+                          <div style={styles.cardMeta}>
+                            {r.authors.slice(0, 3).join(", ")}{r.authors.length > 3 ? " et al." : ""}
+                            {r.year ? ` · ${r.year}` : ""}
+                          </div>
+                        )}
+                        {r.source && <div style={{ ...styles.cardMeta, fontStyle: "italic" }}>{r.source}</div>}
+                        {r.abstract && (
+                          <p style={styles.cardAbstract}>
+                            {r.abstract.length > 220 ? r.abstract.slice(0, 220) + "…" : r.abstract}
+                          </p>
+                        )}
+                      </div>
+                      <div style={styles.cardActions}>
+                        <button
+                          style={{
+                            ...styles.iconBtn,
+                            color: isSaved ? "#1a3a6e" : "#aab4c8",
+                          }}
+                          title={isSaved ? "Remove from Library" : "Save to Library"}
+                          onClick={() => onSaveToggle(r)}
+                        >
+                          {isSaved ? "🔖" : "🔖"}
+                          <span style={{
+                            display: "block",
+                            fontSize: "9px",
+                            color: isSaved ? "#1a3a6e" : "#aab4c8",
+                            marginTop: "2px",
+                            fontWeight: isSaved ? "700" : "400",
+                          }}>
+                            {isSaved ? "Saved" : "Save"}
+                          </span>
+                        </button>
+                      </div>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           )}
@@ -211,10 +220,29 @@ function App() {
   const [hasSearched, setHasSearched] = useState(false);
   const [user, setUser] = useState({ username: "Guest", email: "--", image: profileImg });
 
-  // Filter state lives in App so it persists across renders
   const [timeFilter, setTimeFilter] = useState("Any time");
   const [typeFilter, setTypeFilter] = useState("Any type");
   const [sortFilter, setSortFilter] = useState("Sort by relevance");
+
+  // Global saved articles — shared between Articles page and Library
+  const [savedArticles, setSavedArticles] = useState(() => {
+    try {
+      const stored = localStorage.getItem("lib_saved_articles");
+      return stored ? JSON.parse(stored) : [];
+    } catch { return []; }
+  });
+
+  const handleSaveToggle = (article) => {
+    setSavedArticles((prev) => {
+      const key = article.id ?? article.title;
+      const exists = prev.find((a) => (a.id ?? a.title) === key);
+      const next = exists
+        ? prev.filter((a) => (a.id ?? a.title) !== key)
+        : [...prev, article];
+      localStorage.setItem("lib_saved_articles", JSON.stringify(next));
+      return next;
+    });
+  };
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -226,7 +254,6 @@ function App() {
     setSearchValue(query);
     setLoading(true);
     setHasSearched(true);
-    // Reset filters on new search so results aren't unexpectedly empty
     setTimeFilter("Any time");
     setTypeFilter("Any type");
     setSortFilter("Sort by relevance");
@@ -265,8 +292,14 @@ function App() {
             setTypeFilter={setTypeFilter}
             sortFilter={sortFilter}
             setSortFilter={setSortFilter}
+            savedArticles={savedArticles}
+            onSaveToggle={handleSaveToggle}
           />
         }
+      />
+      <Route
+        path="/library"
+        element={<AcadexiaLibrary savedArticles={savedArticles} onSaveToggle={handleSaveToggle} />}
       />
       <Route
         path="/profile"
@@ -313,7 +346,7 @@ const styles = {
   cardMeta: { fontSize: "12.5px", color: "#64748b", marginBottom: "3px" },
   cardAbstract: { fontSize: "12.5px", color: "#475569", lineHeight: "1.6", marginTop: "6px", marginBottom: 0 },
   cardActions: { display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", flexShrink: 0 },
-  iconBtn: { background: "none", border: "none", cursor: "pointer", fontSize: "18px", color: "#1a3a6e", padding: "4px" },
+  iconBtn: { background: "none", border: "none", cursor: "pointer", fontSize: "18px", padding: "4px", display: "flex", flexDirection: "column", alignItems: "center" },
 };
 
 export default App;
