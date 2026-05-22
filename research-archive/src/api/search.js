@@ -1,11 +1,6 @@
-// Search API wrapper for CORE Academic API v3
-// Env vars (set in your .env file):
-//   REACT_APP_SEARCH_API_URL  →  https://api.core.ac.uk/v3
-//   REACT_APP_SEARCH_API_KEY  →  your CORE API key
-
 export default async function searchAPI(query) {
-  const baseUrl = process.env.REACT_APP_SEARCH_API_URL;
-  const key     = process.env.REACT_APP_SEARCH_API_KEY;
+  const baseUrl = process.env.CORE_API_URL;
+  const key     = process.env.CORE_API_KEY;
 
   if (!query || !query.trim()) return [];
 
