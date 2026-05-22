@@ -1,7 +1,6 @@
 export default async function searchAPI(query) {
   if (!query || !query.trim()) return [];
 
-  // ── Option A: Try CORE API with key from env (REACT_APP_ prefix for CRA) ──
   const baseUrl = process.env.REACT_APP_CORE_API_URL || "https://api.core.ac.uk/v3";
   const key     = process.env.REACT_APP_CORE_API_KEY || "";
 
@@ -37,7 +36,6 @@ export default async function searchAPI(query) {
     console.warn("CORE API failed, falling back to OpenAlex:", coreErr.message);
   }
 
-  // ── Option B: OpenAlex — completely free, no key needed ──
   try {
     const url =
       `https://api.openalex.org/works?search=${encodeURIComponent(query)}&per-page=20&mailto=app@acadexia.com`;
@@ -71,7 +69,6 @@ export default async function searchAPI(query) {
   }
 }
 
-// OpenAlex stores abstracts as inverted index {word: [positions]}
 function rebuildAbstract(invertedIndex) {
   try {
     const words = [];

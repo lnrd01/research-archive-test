@@ -15,9 +15,7 @@ function parseYear(val) {
   return isNaN(n) ? null : n;
 }
 
-/* ============================================================
-   ARTICLES PAGE
-   ============================================================ */
+// ARTICLE PAGE //
 function ArticlesPage({
   searchValue, setSearchValue, handleSearch,
   loading, hasSearched, searchResults,
@@ -210,9 +208,6 @@ function ArticlesPage({
   );
 }
 
-/* ============================================================
-   APP
-   ============================================================ */
 function App() {
   const [searchValue, setSearchValue] = useState("");
   const [searchResults, setSearchResults] = useState([]);

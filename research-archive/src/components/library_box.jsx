@@ -9,9 +9,6 @@ import {
   filterArticles,
 } from "./acadexiaData.jsx";
 
-// ─────────────────────────────────────────────
-//  SVG ICONS
-// ─────────────────────────────────────────────
 function BookIcon({ size = 24 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
@@ -87,9 +84,7 @@ function ListIcon() {
   );
 }
 
-// ─────────────────────────────────────────────
-//  SPOTIFY-STYLE "ADD TO LIST" MODAL
-// ─────────────────────────────────────────────
+// ADD TO LIST FUNCTIONALITY //
 function AddToListModal({ article, readingLists, onAddToList, onCreateAndAdd, onClose }) {
   const [newListName, setNewListName] = useState("");
   const [creating, setCreating]       = useState(false);
@@ -271,9 +266,7 @@ const modal = {
   emptyHint: { fontSize: 13, color: "#aaa", textAlign: "center", padding: "16px 0" },
 };
 
-// ─────────────────────────────────────────────
-//  REFINE RESULTS SIDEBAR
-// ─────────────────────────────────────────────
+// SIDEBAR PANEL (FILTERS AND SORTING) //
 function RefinePanel({ timeFilter, setTimeFilter, articleType, setArticleType, sortBy, setSortBy }) {
   return (
     <div className="refine-panel">
@@ -308,9 +301,7 @@ function RefinePanel({ timeFilter, setTimeFilter, articleType, setArticleType, s
   );
 }
 
-// ─────────────────────────────────────────────
-//  ARTICLE CARD
-// ─────────────────────────────────────────────
+// ARTICLE CARD SECTION //
 function ArticleCard({ article, onSaveToggle, isSaved, readingLists, onAddToList, onCreateAndAdd, onRemoveFromList }) {
   const [menuOpen, setMenuOpen]       = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -387,9 +378,7 @@ function ArticleCard({ article, onSaveToggle, isSaved, readingLists, onAddToList
   );
 }
 
-// ─────────────────────────────────────────────
-//  MAIN LIBRARY PAGE
-// ─────────────────────────────────────────────
+// MAIN LIBRARY PAGE //
 export default function AcadexiaLibrary({ savedArticles = [], onSaveToggle }) {
   const navigate = useNavigate();
 
@@ -411,7 +400,7 @@ export default function AcadexiaLibrary({ savedArticles = [], onSaveToggle }) {
 
   const displayArticles = filterArticles(savedArticles, search, timeFilter, articleType, sortBy);
 
-  // ── Reading list mutations ──
+  // List actions
   const createList = () => {
     if (!newListName.trim()) return;
     setReadingLists((prev) => [...prev, { id: Date.now(), name: newListName.trim(), articles: [] }]);
@@ -432,7 +421,6 @@ export default function AcadexiaLibrary({ savedArticles = [], onSaveToggle }) {
     setListMenu(null);
   };
 
-  // Called from the AddToListModal — add article to an existing list
   const handleAddToList = (listId, article) => {
     setReadingLists((prev) => {
       const next = prev.map((l) => {
@@ -450,13 +438,11 @@ export default function AcadexiaLibrary({ savedArticles = [], onSaveToggle }) {
     });
   };
 
-  // Called from the AddToListModal — create a new list AND add the article
   const handleCreateAndAdd = (name, article) => {
     const newList = { id: Date.now(), name, articles: [article] };
     setReadingLists((prev) => [...prev, newList]);
   };
 
-  // Remove article from the currently open reading list
   const handleRemoveFromList = (listId, article) => {
     setReadingLists((prev) => {
       const next = prev.map((l) =>
@@ -470,7 +456,6 @@ export default function AcadexiaLibrary({ savedArticles = [], onSaveToggle }) {
     });
   };
 
-  // Always derive selectedList from readingLists so it stays fresh
   const liveSelectedList = selectedList
     ? readingLists.find((l) => l.id === selectedList.id) ?? null
     : null;
@@ -570,7 +555,6 @@ export default function AcadexiaLibrary({ savedArticles = [], onSaveToggle }) {
             {readingLists.map((list) => (
               <div key={list.id} style={{ position: "relative" }}>
                 <div className="reading-list-card" onClick={() => setSelectedList(list)}>
-                  {/* Thumbnail mosaic — shows up to 4 article icons */}
                   <div style={rlCard.thumb}>
                     {list.articles.length === 0
                       ? <span style={{ fontSize: 20, color: "#8899bb" }}>📚</span>
@@ -613,7 +597,7 @@ export default function AcadexiaLibrary({ savedArticles = [], onSaveToggle }) {
           </div>
         )}
 
-        {/* ── MY READING LIST — detail / playlist view ── */}
+        {/* MY READING LIST SECTION */}
         {activeTab === "My Reading List" && liveSelectedList && (
           <>
             <RefinePanel timeFilter={timeFilter} setTimeFilter={setTimeFilter}
@@ -663,7 +647,7 @@ export default function AcadexiaLibrary({ savedArticles = [], onSaveToggle }) {
           </>
         )}
 
-        {/* ── ARCHIVE ── */}
+        {/* ARCHIVE */}
         {activeTab === "Archive" && (
           <>
             <RefinePanel timeFilter={timeFilter} setTimeFilter={setTimeFilter}

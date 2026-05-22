@@ -1,7 +1,4 @@
 import { useState } from "react";
-
-// Fully controlled — App.js owns all filter state and passes it down.
-// This prevents the stale-state bug where SidePanel and App drift out of sync.
 function SidePanel({
   onTimeChange, onTypeChange, onSortChange,
   selectedTime, selectedType, selectedSort,
